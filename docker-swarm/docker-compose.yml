@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  ubuntu-client:
+    image: ubuntu:22.04
+    command: ["bash", "-lc", "sleep infinity"]
+    environment:
+      # В Swarm подставится hostname ноды, где запущен таск
+      HOSTNAME: "{{.Node.Hostname}}"
+
+      # Удобно для проверки, можно переопределять при деплое
+      PGHOST: "postgres"
+      PGPORT: "5432"
+      PGUSER: "postgres"
+      PGDATABASE: "postgres"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      NEW_ENV: "hehe"
+
+    networks:
+      - db-postgres-net
+      - ds-redis-net
+
+    # Логи приложения на хосте (каждая нода пишет в свой локальный путь)
+    volumes:
+      - ubuntu-client-logs:/var/log/ubuntu-client
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "1"
+
+    deploy:
+      replicas: 2
+
+      update_config:
+        # rolling update без простоя
+        parallelism: 1
+        order: start-first
+        delay: 5s
+        failure_action: rollback
+
+      restart_policy:
+        condition: any
+        delay: 3s
+        max_attempts: 0
+
+      placement:
+        constraints:
+          - node.labels.SERVERTYPE == worker
+
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 500M
+
+networks:
+  db-postgres-net:
+    external: true
+  ds-redis-net:
+    external: true
+
+volumes:
+  ubuntu-client-logs:
+    driver: local
