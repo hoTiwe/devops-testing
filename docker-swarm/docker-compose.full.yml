@@ -5,25 +5,16 @@ services:
     image: ubuntu:22.04
     command: ["bash", "-lc", "sleep infinity"]
     environment:
-      # В Swarm подставится hostname ноды, где запущен таск
       HOSTNAME: "{{.Node.Hostname}}"
 
-      # Удобно для проверки, можно переопределять при деплое
       PGHOST: "postgres"
       PGPORT: "5432"
       PGUSER: "postgres"
+      PGPASSWORD: "postgres"
       PGDATABASE: "postgres"
+
       REDIS_HOST: "redis"
       REDIS_PORT: "6379"
-      NEW_ENV: "hehe"
-
-    networks:
-      - db-postgres-net
-      - ds-redis-net
-
-    # Логи приложения на хосте (каждая нода пишет в свой локальный путь)
-    volumes:
-      - ubuntu-client-logs:/var/log/ubuntu-client
 
     logging:
       driver: json-file
@@ -33,34 +24,67 @@ services:
 
     deploy:
       replicas: 2
-
       update_config:
-        # rolling update без простоя
         parallelism: 1
         order: start-first
         delay: 5s
         failure_action: rollback
-
       restart_policy:
         condition: any
         delay: 3s
         max_attempts: 0
-
       placement:
         constraints:
           - node.labels.SERVERTYPE == worker
-
       resources:
         limits:
           cpus: "1.0"
           memory: 500M
 
+    networks:
+      - db-postgres-net
+      - ds-redis-net
+
+    volumes:
+      - ubuntu-client-logs:/var/log/ubuntu-client
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "postgres"
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.SERVERTYPE == worker
+    networks:
+      - db-postgres-net
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.SERVERTYPE == worker
+    networks:
+      - ds-redis-net
+
 networks:
   db-postgres-net:
-    external: true
+    driver: overlay
+    attachable: true
   ds-redis-net:
-    external: true
+    driver: overlay
+    attachable: true
 
 volumes:
   ubuntu-client-logs:
+    driver: local
+  postgres-data:
     driver: local
