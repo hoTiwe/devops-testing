@@ -1,0 +1,28 @@
+services:
+  srv1:
+    build: .
+    ports: ["2221:22"]
+    mem_limit: 512m
+    cpus: "0.5"
+    networks: [labnet]
+
+  srv2:
+    build: .
+    ports: ["2222:22"]
+    mem_limit: 512m
+    cpus: "0.5"
+    networks: [labnet]
+
+  srv3:
+    build: .
+    ports: ["2223:22"]
+    mem_limit: 512m
+    cpus: "0.5"
+    networks: [labnet]
+
+networks:
+  labnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.250.0.0/24

@@ -1,0 +1,5 @@
+- name:  SSH hardening (disable root and password auth)
+  hosts: servers
+  become: true
+  roles:
+    - ssh-hardering

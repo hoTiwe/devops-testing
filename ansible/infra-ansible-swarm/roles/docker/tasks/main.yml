@@ -1,0 +1,17 @@
+- name: Wait for apt lock
+  ansible.builtin.shell: |
+    while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
+      sleep 1
+    done
+  changed_when: false
+
+- name: Install docker from Ubuntu repository
+  ansible.builtin.apt:
+    name: docker.io
+    state: present
+    update_cache: true
+
+- name: Verify docker client is installed
+  ansible.builtin.command: docker --version
+  register: docker_version
+  changed_when: false

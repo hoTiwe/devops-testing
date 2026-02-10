@@ -1,0 +1,7 @@
+- name: Install required packages
+  hosts: servers
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+  roles:
+    - packages

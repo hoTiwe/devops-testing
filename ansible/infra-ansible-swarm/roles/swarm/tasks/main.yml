@@ -1,0 +1,48 @@
+- name: Check if node is already in a swarm
+  ansible.builtin.command: docker info -f '{{ "{{" }}.Swarm.LocalNodeState{{ "}}" }}'
+  register: swarm_state
+  changed_when: false
+
+# --- Manager init (only on swarm_manager group) ---
+- name: Initialize swarm on manager
+  ansible.builtin.command: "docker swarm init --advertise-addr {{ swarm_advertise_addr }}"
+  when:
+    - inventory_hostname in groups['swarm_manager']
+    - swarm_state.stdout != "active"
+
+- name: Get worker join token (on manager)
+  ansible.builtin.command: docker swarm join-token -q worker
+  register: worker_token
+  changed_when: false
+  when: inventory_hostname in groups['swarm_manager']
+
+- name: Set manager address fact
+  ansible.builtin.set_fact:
+    swarm_manager_addr: "{{ hostvars[groups['swarm_manager'][0]].swarm_advertise_addr }}"
+  when: groups['swarm_manager'] | length > 0
+
+# --- Workers join (on swarm_workers, but not on manager if you don't want) ---
+- name: Join swarm as worker
+  ansible.builtin.command: >
+    docker swarm join
+    --token {{ hostvars[groups['swarm_manager'][0]].worker_token.stdout }}
+    {{ swarm_manager_addr }}:2377
+  when:
+    - inventory_hostname in groups['swarm_workers']
+    - swarm_state.stdout != "active"
+    - groups['swarm_manager'] | length > 0
+
+# --- Label nodes (must run on manager) ---
+- name: Get node hostname (for labeling)
+  ansible.builtin.command: hostname
+  register: node_hostname
+  changed_when: false
+  when: inventory_hostname in groups['swarm_workers']
+
+- name: Label worker nodes on manager
+  ansible.builtin.command: >
+    docker node update --label-add {{ swarm_worker_label_key }}={{ swarm_worker_label_value }}
+    {{ hostvars[item].node_hostname.stdout }}
+  delegate_to: "{{ groups['swarm_manager'][0] }}"
+  run_once: true
+  loop: "{{ groups['swarm_workers'] }}"

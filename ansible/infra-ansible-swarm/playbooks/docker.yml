@@ -1,0 +1,5 @@
+- name: Install Docker from Ubuntu repository (pinned)
+  hosts: servers
+  become: true
+  roles:
+    - docker

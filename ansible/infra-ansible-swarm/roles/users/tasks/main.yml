@@ -1,0 +1,15 @@
+- name: Create users
+  ansible.builtin.user:
+    name: "{{ item.username }}"
+    shell: /bin/bash
+    create_home: true
+    groups: "{{ 'sudo' if (item.sudo | default(false)) else omit }}"
+    append: true
+  loop: "{{ users }}"
+
+- name: Add SSH keys
+  ansible.posix.authorized_key:
+    user: "{{ item.0.username }}"
+    key: "{{ item.1 }}"
+    state: present
+  loop: "{{ users | subelements('ssh_keys', skip_missing=True) }}"

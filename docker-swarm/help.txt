@@ -1,17 +1,3 @@
-# Поднимает постгрес и редис, проверяем статус
-docker service create \
-  --name postgres \
-  --network db-postgres-net \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_DB=postgres \
-  postgres:16
-
-docker service create \
-  --name redis \
-  --network ds-redis-net \
-  redis:7
-
 docker service ls
 docker service ps postgres
 docker service ps redis
@@ -27,3 +13,13 @@ apt-get install -y postgresql-client redis-tools ca-certificates iputils-ping ne
 psql -h postgres -U postgres -d postgres -c "SELECT 1;"
 
 redis-cli -h redis -p 6379 PING
+
+| Ситуация           | Команда                         |
+| ------------------ | ------------------------------- |
+| Деплой             | `docker stack deploy`           |
+| Не стартует сервис | `docker service ps --no-trunc`  |
+| Масштабирование    | `docker service scale`          |
+| Обновление         | `docker service update --force` |
+| Откат              | `docker service rollback`       |
+| Логи               | `docker service logs -f`        |
+| Где запущено       | `docker service ps`             |

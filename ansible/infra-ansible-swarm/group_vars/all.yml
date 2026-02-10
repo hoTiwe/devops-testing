@@ -1,0 +1,48 @@
+ansible_user: ubuntu
+ansible_become: true
+
+admins:
+  - admin-1
+  - admin-2
+  - admin-3
+
+tech_users:
+  - ansible
+  - autodeploy
+
+users:
+  - username: ansible
+    kind: tech
+    sudo: true
+    ssh_keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKLkztEPs84+WAAsjNxNT5o4xOUbPcAEJdUsXl4+H/WQ ansible@laptop"
+
+  - username: autodeploy
+    kind: tech
+    sudo: false
+    ssh_keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBtAR6jVYp1fHMIhGml4AaZW/udcbdILwWOxV/KZXaJQ autodeploy@ci"
+
+  - username: admin-1
+    kind: admin
+    sudo: true
+    ssh_keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID5bc8K6bWs1c1+eDZkTisuiP8l47AZWRuoeI9kCH3A8 admin-1@company"
+
+  - username: admin-2
+    kind: admin
+    sudo: true
+    ssh_keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINgzbtT4Pj13qr3+TmSRgKgrUNQJfeNGUjQJ3Lq/Gu/y admin-2@macbook"
+
+  - username: admin-3
+    kind: admin
+    sudo: true
+    ssh_keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBabXNhe7h6oTBtKqY2p1Sqd7hU1WLhk4FSU7UcoPVH7 admin-3@desktop"
+
+base_packages:
+  - mc
+  - ncdu
+  - cifs-utils
+  - nfs-common

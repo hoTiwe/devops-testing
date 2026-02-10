@@ -1,0 +1,5 @@
+swarm_advertise_addr: "{{ ansible_default_ipv4.address }}"
+
+# Label
+swarm_worker_label_key: "SERVERTYPE"
+swarm_worker_label_value: "worker"
